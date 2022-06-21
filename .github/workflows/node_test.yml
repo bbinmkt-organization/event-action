@@ -1,0 +1,52 @@
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+
+on:
+  workflow_call:
+    inputs:
+      current:
+        description: 'Node version current use'
+        default: '14.15.4'
+        required: false
+        type: string
+      next:
+        description: 'Node version will be used'
+        required: false
+        type: string
+      old:
+        description: 'Previous Node version'
+        required: false
+        type: string
+      submodule:
+        required: false
+        type: string
+        default: 'recursive'
+      pm:
+        description: 'Package manager'
+        required: false
+        type: string
+        default: 'npm'
+    secrets:
+      pat:
+        required: true
+
+jobs:
+  lint:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.15.4]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.pat }}
+        submodules: ${{ inputs.submodule }}
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: ${{ inputs.pm }} install
+    - run: ${{ inputs.pm }} run lint
