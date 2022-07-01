@@ -1,0 +1,78 @@
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+
+on:
+  workflow_call:
+    inputs:
+      submodule:
+        required: false
+        type: string
+        default: 'recursive'
+      pm:
+        description: 'Package manager'
+        required: false
+        type: string
+        default: 'npm'
+      node-version:
+        default: '["14.15.4"]'
+        required: false
+        type: string
+    secrets:
+      pat:
+        required: true
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    outputs:
+      node: ${{ steps.node-version-json.outputs.matrix }}
+    steps:
+      - id: node-version-json
+        name: Parse node-version array
+        run: |
+          echo "::set-output name=matrix::$input"
+        env:
+          input: ${{ inputs.node-version }}
+
+  cypress:
+    runs-on: ubuntu-20.04
+    needs: parse
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(needs.parse.outputs.node) }}
+    steps:
+      - name: Install CNS11643 fonts
+        uses: hms5232/install-CNS11643-fonts-action@v1
+        with:
+          kai: 'false'
+        timeout-minutes: 5
+      - name: Checkout
+        if: always()
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.pat }}
+          submodules: ${{ inputs.submodule }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      # Install NPM dependencies, cache them correctly
+      # and run all Cypress tests
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          install-command: ${{ inputs.pm }} install
+          build: npx cypress info
+          start: ${{ inputs.pm }} run serve
+      - name: Upload Screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+      - name: Upload Videos
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: cypress-videos
+          path: cypress/videos
