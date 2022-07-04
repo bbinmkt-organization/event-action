@@ -34,7 +34,7 @@ jobs:
           input: ${{ inputs.node-version }}
 
   cypress:
-    runs-on: ubuntu-20.04
+    runs-on: macos-latest
     needs: parse
     strategy:
       fail-fast: false
