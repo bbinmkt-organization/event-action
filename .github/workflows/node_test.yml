@@ -1,0 +1,57 @@
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows
+
+on:
+  workflow_call:
+    inputs:
+      submodule:
+        required: false
+        type: string
+        default: 'recursive'
+      pm:
+        description: 'Package manager'
+        required: false
+        type: string
+        default: 'npm'
+      node-version:
+        default: '["14.15.4"]'
+        required: false
+        type: string
+    secrets:
+      pat:
+        required: true
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    outputs:
+      node: ${{ steps.node-version-json.outputs.matrix }}
+    steps:
+      - id: node-version-json
+        name: Parse node-version array
+        run: |
+          echo "::set-output name=matrix::$input"
+        env:
+          input: ${{ inputs.node-version }}
+
+  lint:
+
+    runs-on: ubuntu-latest
+
+    needs: parse
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(needs.parse.outputs.node) }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.pat }}
+        submodules: ${{ inputs.submodule }}
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: ${{ inputs.pm }} install
+    - run: ${{ inputs.pm }} run lint
