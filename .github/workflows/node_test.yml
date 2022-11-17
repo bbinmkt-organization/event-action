@@ -45,14 +45,14 @@ jobs:
         node-version: ${{ fromJson(needs.parse.outputs.node) }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         token: ${{ secrets.pat }}
         submodules: ${{ inputs.submodule }}
     - name: Setup npm config file in project
       run: echo -e "//npm.pkg.github.com/:_authToken=${{ secrets.pat }}\n@bbinmkt-organization:registry=https://npm.pkg.github.com" > .npmrc
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
     - run: ${{ inputs.pm }} install
