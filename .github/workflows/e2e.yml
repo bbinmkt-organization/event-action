@@ -53,16 +53,20 @@ jobs:
           token: ${{ secrets.pat }}
           submodules: ${{ inputs.submodule }}
       - name: Setup npm config file in project
+        if: always()
         run: echo -e "//npm.pkg.github.com/:_authToken=${{ secrets.pat }}\n@bbinmkt-organization:registry=https://npm.pkg.github.com" > .npmrc
       - name: Use Node.js ${{ matrix.node-version }}
+        if: always()
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
       - run: ${{ inputs.pm }} install
+        if: always()
         shell: bash
       # Install NPM dependencies, cache them correctly
       # and run all Cypress tests
       - name: Cypress run
+        if: always()
         uses: cypress-io/github-action@v2
         with:
           install: false
