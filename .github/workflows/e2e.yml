@@ -27,11 +27,6 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - name: Install CNS11643 fonts
-        uses: hms5232/install-CNS11643-fonts-action@v1
-        with:
-          kai: 'false'
-        timeout-minutes: 5
       - name: Checkout
         if: always()
         uses: actions/checkout@v3
